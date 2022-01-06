@@ -1,0 +1,42 @@
+tool:
+  users:
+    user:
+      xdg: true                         # force xdg dirs
+      dotconfig: true                   # sync this user's config from a dotfiles repo available as salt://dotconfig/<user>/gpg or salt://dotconfig/gpg
+      persistenv: '.config/zsh/zshenv'  # persist env vars specified in salt to this file (will be appended to file relative to $HOME)
+      rchook: '.config/zsh/zshrc'       # add runcom hooks to this file (will be appended to file relative to $HOME)
+      gpg:
+        agent:
+          sshrc: .ssh/config          # add hook to ssh to autoreset TTY to current one on ssh launch
+          config:                     # gpg-agent.conf configuration options for this user
+            default-cache-ttl: 10
+        config:                       # gpg.conf configuration options for this user
+          charset: utf-8
+
+  gpg:
+    # insert shim that switches pinentry program depending on env (terminal -> tty/curses, gui -> x11/pinentry-mac)
+    pinentry_sane:                # set to true to use defaults, don't specify or false to disable
+      terminal: tty               # when using pinentry-sane, use pinentry-tty as default interface. also possible: curses
+      path: /some/path            # save pinentry-sane somewhere else, not /usr/local/bin
+
+    # default formula configuration for all users
+    defaults:
+      pinentry_sane: true         # update gpg-agent.conf to use pinentry-sane
+      pinentry_update_rc: false   # automatically insert 'export PINENTRY_USER_DATA="USE_CURSES=1"' into shell rc to make shim functional
+      agent:
+        sshrc: .ssh/config        # add hook to ssh to autoreset TTY to current one on ssh launch
+        sshcontrol: []            # populate sshcontrol file (keys gpg-agent uses for ssh connections)
+        config:
+          enable-ssh-support: ''  # set keys to empty values for the string without config value
+          default-cache-ttl: 60
+          max-cache-ttl: 120
+      config:
+        use-agent: ''
+        no-greeting: ''
+        keyid-format: 0xlong
+        with-fingerprint: ''
+    users:
+      user:                       # user configuration can also be specified in tool:gpg:users
+        rchook: '.bashrc'
+        gpg:
+          pinentry_sane: false
