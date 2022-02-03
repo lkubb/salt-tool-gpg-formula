@@ -8,7 +8,9 @@ Sane pinentry is available:
     - context:
         pinentry_terminal: {{ gpg.pinentry_sane_terminal | default("tty") }}
     - user: root
+    - group: {{ salt['user.primary_group']('root') }}
     - mode: '0755'
+    - makedirs: true
 
   {%- for user in gpg.users | selectattr('_gpg.update_pinentry', 'defined') %}
 

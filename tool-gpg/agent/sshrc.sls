@@ -8,8 +8,19 @@
 # https://bugzilla.mindrot.org/show_bug.cgi?id=2824#c9
 # https://github.com/drduh/YubiKey-Guide/issues/301
 # https://unix.stackexchange.com/questions/554153/what-is-the-proper-configuration-for-gpg-ssh-and-gpg-agent-to-use-gpg-auth-sub
-SSH points gpg-agent to current TTY on connection (eg pinentry):
+ssh config file exists for user '{{ user.name }}:
+  file.managed:
+    - name: {{ user.home }}/{{ user.gpg.agent.sshrc }}
+    - user: {{ user.name }}
+    - group: {{ user.group }}
+    - mode: '0600'
+    - dir_mode: '0700'
+    - makedirs: true
+
+SSH points gpg-agent to current TTY on connection for user '{{ user.name }}':
   file.append:
     - name: {{ user.home }}/{{ user.gpg.agent.sshrc }}
     - text: Match host * exec "gpg-connect-agent UPDATESTARTUPTTY /bye"
+    - require:
+      - ssh config file exists for user '{{ user.name }}
 {%- endfor %}

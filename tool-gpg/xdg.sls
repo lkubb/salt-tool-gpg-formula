@@ -22,13 +22,22 @@ GnuPG uses XDG dirs during this salt run:
       - GnuPG setup is completed
 
   {%- if user.get('persistenv') %}
+
+persistenv file for gpg exists for user '{{ user.name }}':
+  file.managed:
+    - name: {{ user.home }}/{{ user.persistenv }}
+    - user: {{ user.name }}
+    - group: {{ user.group }}
+    - mode: '0600'
+    - dir_mode: '0700'
+    - makedirs: true
+
 GnuPG knows about XDG location for user '{{ user.name }}':
   file.append:
     - name: {{ user.home }}/{{ user.persistenv }}
     - text: export GNUPGHOME="${XDG_DATA_HOME:-$HOME/.local/share}/gnupg"
-    - user: {{ user.name }}
-    - group: {{ user.group }}
-    - mode: '0600'
+    - require:
+      - persistenv file for gpg exists for user '{{ user.name }}'
     - prereq_in:
       - GnuPG setup is completed
   {%- endif %}
