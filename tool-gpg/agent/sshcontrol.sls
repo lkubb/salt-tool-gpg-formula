@@ -10,4 +10,6 @@ GnuPG Agent knows about {{ user.name }}'s keys:
     - user: {{ user.name }}
     - group: {{ user.group }}
     - mode: '0600'
+    - dir_mode: '0700'
+    - makedirs: true
 {%- endfor %}

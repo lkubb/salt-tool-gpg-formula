@@ -14,12 +14,14 @@ Sane pinentry is available:
 
   {%- for user in gpg.users | selectattr('_gpg.update_pinentry', 'defined') %}
 
-GnuPG Agent config file exists for user {{ user.name }}:
+GnuPG Agent config file exists for user {{ user.name }} for pinentry:
   file.managed:
     - name: {{ user._gpg.confdir }}/gpg-agent.conf
     - user: {{ user.name }}
     - group: {{ user.group }}
     - mode: '0600'
+    - makedirs: true
+    - dir_mode: '0700'
 
 GnuPG Agent config file does not contain pinentry-program definition for user {{ user.name }}:
   file.replace:
@@ -31,15 +33,15 @@ GnuPG Agent config file does not contain pinentry-program definition for user {{
     - unless:
       - grep -e "^pinentry-program {{ gpg._pinentry_sane }}$"
     - require:
-      - GnuPG Agent config file exists for user {{ user.name }}
+      - GnuPG Agent config file exists for user {{ user.name }} for pinentry
 
 Pinentry program is set to pinentry-sane for user {{ user.name }}:
   file.append:
     - name: {{ user._gpg.confdir }}/gpg-agent.conf
     - text: pinentry-program {{ gpg._pinentry_sane }}
     - require:
-      # because file.append does not allow owner/mode to be specified when file does not exist
-      - GnuPG Agent config file exists for user {{ user.name }}
+      # because file.append does not allow owner/mode to be specified
+      - GnuPG Agent config file exists for user {{ user.name }} for pinentry
       # because duplicate definitions is bad form
       - GnuPG Agent config file does not contain pinentry-program definition for user {{ user.name }}
   {%- endfor %}

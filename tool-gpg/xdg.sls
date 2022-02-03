@@ -14,6 +14,16 @@ Existing GnuPG configuration is migrated for user '{{ user.name }}':
     - prereq_in:
       - GnuPG setup is completed
 
+GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}':
+  file.directory:
+    - name: {{ user.xdg.data }}/gnupg
+    - user: {{ user.name }}
+    - group: {{ user.group }}
+    - mode: '0700'
+    - makedirs: true
+    - prereq_in:
+      - GnuPG setup is completed
+
 GnuPG uses XDG dirs during this salt run:
   environ.setenv:
     - value:
@@ -59,6 +69,20 @@ GnuPG config file is moved to XDG_CONFIG_HOME for user '{{ user.name }}':
       - test -e {{ user.xdg.data }}/gnupg/gpg.conf
     - unless:
       - test -L {{ user.xdg.data }}/gnupg/gpg.conf
+    - require:
+      - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
+      - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
+    - prereq_in:
+      - GnuPG setup is completed
+
+GnuPG config file exists for user '{{ user.name }}':
+  file.managed:
+    - name: {{ user.xdg.config }}/gnupg/gpg.conf
+    - user: {{ user.name }}
+    - group: {{ user.group }}
+    - mode: '0600'
+    - require:
+      - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
     - prereq_in:
       - GnuPG setup is completed
 
@@ -68,6 +92,9 @@ GnuPG config file location is symlinked to XDG_CONFIG_HOME for user '{{ user.nam
     - target: {{ user.xdg.config }}/gnupg/gpg.conf
     - user: {{ user.name }}
     - group: {{ user.group }}
+    - require:
+      - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
+      - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
     - prereq_in:
       - GnuPG setup is completed
 
@@ -79,6 +106,20 @@ GnuPG Agent config file is moved to XDG_CONFIG_HOME for user '{{ user.name }}':
       - test -e {{ user.xdg.data }}/gnupg/gpg-agent.conf
     - unless:
       - test -L {{ user.xdg.data }}/gnupg/gpg-agent.conf
+    - require:
+      - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
+      - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
+    - prereq_in:
+      - GnuPG setup is completed
+
+GnuPG Agent config file exists for user '{{ user.name }}':
+  file.managed:
+    - name: {{ user.xdg.config }}/gnupg/gpg-agent.conf
+    - user: {{ user.name }}
+    - group: {{ user.group }}
+    - mode: '0600'
+    - require:
+      - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
     - prereq_in:
       - GnuPG setup is completed
 
@@ -88,6 +129,9 @@ GnuPG Agent config file location is symlinked to XDG_CONFIG_HOME for user '{{ us
     - target: {{ user.xdg.config }}/gnupg/gpg-agent.conf
     - user: {{ user.name }}
     - group: {{ user.group }}
+    - require:
+      - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
+      - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
     - prereq_in:
       - GnuPG setup is completed
 
@@ -99,6 +143,20 @@ GnuPG Agent sshcontrol file is moved to XDG_CONFIG_HOME for user '{{ user.name }
       - test -e {{ user.xdg.data }}/gnupg/sshcontrol
     - unless:
       - test -L {{ user.xdg.data }}/gnupg/sshcontrol
+    - require:
+      - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
+      - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
+    - prereq_in:
+      - GnuPG setup is completed
+
+GnuPG Agent sshcontrol file exists for user '{{ user.name }}':
+  file.managed:
+    - name: {{ user.xdg.config }}/gnupg/sshcontrol
+    - user: {{ user.name }}
+    - group: {{ user.group }}
+    - mode: '0600'
+    - require:
+      - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
     - prereq_in:
       - GnuPG setup is completed
 
@@ -108,6 +166,9 @@ GnuPG Agent sshcontrol file location is symlinked to XDG_CONFIG_HOME for user '{
     - target: {{ user.xdg.config }}/gnupg/sshcontrol
     - user: {{ user.name }}
     - group: {{ user.group }}
+    - require:
+      - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
+      - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
     - prereq_in:
       - GnuPG setup is completed
 {%- endfor %}

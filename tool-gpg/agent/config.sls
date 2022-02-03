@@ -9,6 +9,8 @@ GnuPG Agent is configured as specified for user '{{ user.name }}':
         config: {{ user.gpg.agent.config }}
     - template: jinja
     - mode: '0600'
+    - dir_mode: '0700'
+    - makedirs: true
     - user: {{ user.name }}
     - group: {{ user.group }}
 {%- endfor %}

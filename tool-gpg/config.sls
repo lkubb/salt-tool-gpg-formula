@@ -11,4 +11,6 @@ GnuPG is configured as specified for user '{{ user.name }}':
     - mode: '0600'
     - user: {{ user.name }}
     - group: {{ user.group }}
+    - dir_mode: '0700'
+    - makedirs: true
 {%- endfor %}
