@@ -26,12 +26,12 @@ GnuPG Agent config file exists for user {{ user.name }} for pinentry:
 GnuPG Agent config file does not contain pinentry-program definition for user {{ user.name }}:
   file.replace:
     - name: {{ user._gpg.confdir }}/gpg-agent.conf
-    - pattern: {{ "^pinentry-program.*" | regex_escape }}
+    - pattern: ^pinentry-program.*\n
     - repl: ''
     - onlyif:
-      - grep -e "^pinentry-program.*" {{ user._gpg.confdir }}
+      - grep -e "^pinentry-program.*" {{ user._gpg.confdir }}/gpg-agent.conf
     - unless:
-      - grep -e "^pinentry-program {{ gpg._pinentry_sane }}$"
+      - grep -e "^pinentry-program\ {{ gpg._pinentry_sane | regex_escape }}$" {{ user._gpg.confdir }}/gpg-agent.conf
     - require:
       - GnuPG Agent config file exists for user {{ user.name }} for pinentry
 
