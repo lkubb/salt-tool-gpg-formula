@@ -11,7 +11,7 @@ Existing GnuPG configuration is migrated for user '{{ user.name }}':
     - onlyif:
       - test -e {{ user.home }}/.gnupg
     - makedirs: true
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
 GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}':
@@ -21,14 +21,14 @@ GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}':
     - group: {{ user.group }}
     - mode: '0700'
     - makedirs: true
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
 GnuPG uses XDG dirs during this salt run:
   environ.setenv:
     - value:
         GNUPGHOME: "{{ user.xdg.data }}/gnupg"
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
   {%- if user.get('persistenv') %}
@@ -48,7 +48,7 @@ GnuPG knows about XDG location for user '{{ user.name }}':
     - text: export GNUPGHOME="${XDG_DATA_HOME:-$HOME/.local/share}/gnupg"
     - require:
       - persistenv file for gpg exists for user '{{ user.name }}'
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
   {%- endif %}
 
@@ -58,7 +58,7 @@ GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}':
     - mode: '0700'
     - user: {{ user.name }}
     - group: {{ user.group }}
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
 GnuPG config file is moved to XDG_CONFIG_HOME for user '{{ user.name }}':
@@ -72,7 +72,7 @@ GnuPG config file is moved to XDG_CONFIG_HOME for user '{{ user.name }}':
     - require:
       - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
 GnuPG config file exists for user '{{ user.name }}':
@@ -83,7 +83,7 @@ GnuPG config file exists for user '{{ user.name }}':
     - mode: '0600'
     - require:
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
 GnuPG config file location is symlinked to XDG_CONFIG_HOME for user '{{ user.name }}':
@@ -95,7 +95,7 @@ GnuPG config file location is symlinked to XDG_CONFIG_HOME for user '{{ user.nam
     - require:
       - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
 GnuPG Agent config file is moved to XDG_CONFIG_HOME for user '{{ user.name }}':
@@ -109,7 +109,7 @@ GnuPG Agent config file is moved to XDG_CONFIG_HOME for user '{{ user.name }}':
     - require:
       - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
 GnuPG Agent config file exists for user '{{ user.name }}':
@@ -120,7 +120,7 @@ GnuPG Agent config file exists for user '{{ user.name }}':
     - mode: '0600'
     - require:
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
 GnuPG Agent config file location is symlinked to XDG_CONFIG_HOME for user '{{ user.name }}':
@@ -132,7 +132,7 @@ GnuPG Agent config file location is symlinked to XDG_CONFIG_HOME for user '{{ us
     - require:
       - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
 GnuPG Agent sshcontrol file is moved to XDG_CONFIG_HOME for user '{{ user.name }}':
@@ -146,7 +146,7 @@ GnuPG Agent sshcontrol file is moved to XDG_CONFIG_HOME for user '{{ user.name }
     - require:
       - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
 GnuPG Agent sshcontrol file exists for user '{{ user.name }}':
@@ -157,7 +157,7 @@ GnuPG Agent sshcontrol file exists for user '{{ user.name }}':
     - mode: '0600'
     - require:
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 
 GnuPG Agent sshcontrol file location is symlinked to XDG_CONFIG_HOME for user '{{ user.name }}':
@@ -169,6 +169,6 @@ GnuPG Agent sshcontrol file location is symlinked to XDG_CONFIG_HOME for user '{
     - require:
       - GnuPG XDG_DATA_HOME location exists for user '{{ user.name }}'
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
-    - prereq_in:
+    - require_in:
       - GnuPG setup is completed
 {%- endfor %}
