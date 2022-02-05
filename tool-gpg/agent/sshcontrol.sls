@@ -5,6 +5,7 @@ GnuPG Agent knows about {{ user.name }}'s keys:
   file.managed:
     - name: {{ user._gpg.confdir }}/sshcontrol
     - source: salt://tool-gpg/agent/files/sshcontrol
+    - template: jinja
     - context: {# though a simple list, put it into separate file to ease transition to TOFS pattern @TODO #}
         keygrips: {{ user.gpg.agent.sshcontrol | json }}
     - user: {{ user.name }}
