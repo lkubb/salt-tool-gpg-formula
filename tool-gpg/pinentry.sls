@@ -7,6 +7,7 @@ Sane pinentry is available:
     - source: salt://tool-gpg/files/pinentry-sane
     - context:
         pinentry_terminal: {{ gpg.pinentry_sane_terminal | default("tty") }}
+    - template: jinja
     - user: root
     - group: {{ salt['user.primary_group']('root') }}
     - mode: '0755'
