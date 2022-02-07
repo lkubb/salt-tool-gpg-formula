@@ -39,4 +39,4 @@ esac
 
 # Otherwise, use any X11 UI (configured by Debian Alternatives System)
 # Note: Will fall back to curses if $DISPLAY is not available.
-exec pinentry-{{ 'mac' if 'MacOS' == grains['kernel'] else 'x11' }} "$@"
+exec pinentry-{{ 'mac' if 'Darwin' == grains['kernel'] else 'x11' }} "$@"
