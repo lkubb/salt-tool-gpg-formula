@@ -64,7 +64,12 @@ The following shows an example of `tool-gpg` pillar configuration. Namespace it 
 ```yaml
 user:
   xdg: true                       # force xdg dirs
-  dotconfig: true   # sync this user's config from a dotfiles repo available as salt://dotconfig/<user>/iterm or salt://dotconfig/iterm
+  # sync this user's config from a dotfiles repo available as
+  # salt://dotconfig/<user>/gpg or salt://dotconfig/gpg
+  dotconfig:              # can be bool or mapping
+    file_mode: '0600'     # default: keep destination or salt umask (new)
+    dir_mode: '0700'      # default: 0700
+    clean: false          # delete files in target. default: false
   persistenv: '.config/zsh/zshenv' # persist pipx env vars to use xdg dirs permanently (will be appended to file relative to $HOME)
   rchook: '.bashrc'               # add runcom hooks to this file (will be appended to file relative to $HOME)
   gpg:
