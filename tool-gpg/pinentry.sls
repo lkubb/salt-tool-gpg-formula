@@ -20,6 +20,7 @@ GnuPG Agent config file exists for user {{ user.name }} for pinentry:
     - name: {{ user._gpg.confdir }}/gpg-agent.conf
     - user: {{ user.name }}
     - group: {{ user.group }}
+    - replace: false
     - mode: '0600'
     - makedirs: true
     - dir_mode: '0700'

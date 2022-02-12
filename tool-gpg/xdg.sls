@@ -38,6 +38,7 @@ persistenv file for gpg exists for user '{{ user.name }}':
     - name: {{ user.home }}/{{ user.persistenv }}
     - user: {{ user.name }}
     - group: {{ user.group }}
+    - replace: false
     - mode: '0600'
     - dir_mode: '0700'
     - makedirs: true
@@ -80,6 +81,7 @@ GnuPG config file exists for user '{{ user.name }}':
     - name: {{ user.xdg.config }}/gnupg/gpg.conf
     - user: {{ user.name }}
     - group: {{ user.group }}
+    - replace: false
     - mode: '0600'
     - require:
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
@@ -117,6 +119,7 @@ GnuPG Agent config file exists for user '{{ user.name }}':
     - name: {{ user.xdg.config }}/gnupg/gpg-agent.conf
     - user: {{ user.name }}
     - group: {{ user.group }}
+    - replace: false
     - mode: '0600'
     - require:
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
@@ -154,6 +157,7 @@ GnuPG Agent sshcontrol file exists for user '{{ user.name }}':
     - name: {{ user.xdg.config }}/gnupg/sshcontrol
     - user: {{ user.name }}
     - group: {{ user.group }}
+    - replace: false
     - mode: '0600'
     - require:
       - GnuPG XDG_CONFIG_HOME location exists for user '{{ user.name }}'
