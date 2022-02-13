@@ -20,3 +20,6 @@ include:
 {%- if gpg.users | selectattr('gpg.pinentry_sane', 'defined') | selectattr('gpg.pinentry_sane') %}
   - .pinentry
 {%- endif %}
+{%- if gpg.users | selectattr('gpg.import', 'defined') | list %}
+  - .import
+{%- endif %}
