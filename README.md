@@ -26,6 +26,9 @@ Match host * exec "gpg-connect-agent UPDATESTARTUPTTY /bye"
 ```
 So just before every single connection, OpenSSH updates the gpg-agent default tty to the current one. If the agent was not running already, it is started as well. This workaround needs `GPG_TTY=$(tty)` to succeed.
 
+### ZSH
+`zsh` specifically sets `$TTY` during start. Using this with `export GPG_TTY="$TTY"` is [much faster](https://github.com/romkatv/powerlevel10k#how-do-i-export-gpg_tty-when-using-instant-prompt) than the usual method. This also avoids [another problem](https://unix.stackexchange.com/questions/608842/zshrc-export-gpg-tty-tty-says-not-a-tty) specifically when using `powerlevel10k` instant prompt: `tty` requires stdin to be attached to a terminal, but `powerlevel10k` redirects stdin to `/dev/null` in that mode.
+
 ### Sane Pinentry
 GnuPG will typically generally use a graphical pinentry if `$DISPLAY` is set, even if invoked from a terminal. This can cause problems (e.g. while connected through SSH) and breaks the flow. This formula contains a script called `pinentry-sane` that acts as a shim. If `PINENTRY_USER_DATA="USE_CURSES=1"` is set, it will invoke `pinentry-tty` or `pinentry-curses` depending on formula configuration, otherwise `pinentry-mac` or `pinentry-x11` depending on the system. This emulates the behavior of `pinentry-mac` for Linux and on MacOS provides the user with the choice of which terminal-based pinentry to use.
 
