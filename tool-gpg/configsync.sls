@@ -10,7 +10,7 @@ GnuPG configuration is synced for user '{{ user.name }}':
       - salt://dotconfig/{{ user.name }}/gnupg
       - salt://dotconfig/gnupg
     - context:
-        user: {{ user }}
+        user: {{ user | json }}
     - template: jinja
     - user: {{ user.name }}
     - group: {{ user.group }}
