@@ -69,7 +69,7 @@ Key '{{ key }}' trust level is managed for user '{{ user.name }}':
   cmd.run:
     - name: |
       {%- if 'keyid' == type %}
-        echo "$(gpg --list-keys 0x1848792F9E2795E9 | head -n 2 | \
+        echo "$(gpg --list-keys {{ key }} | head -n 2 | \
           tail -n 1 | awk '{$1=$1};1'):{{ trust_level }}" \
       {%- else %}
         echo '{{ key }}:{{ trust_level }}' | \
@@ -80,7 +80,7 @@ Key '{{ key }}' trust level is managed for user '{{ user.name }}':
       - |
           sudo -u {{ user.name }} gpg --homedir '{{ user._gpg.confdir }}' --export-ownertrust | \
       {%- if 'keyid' == type %}
-            grep "$(gpg --list-keys 0x1848792F9E2795E9 | head -n 2 | \
+            grep "$(gpg --list-keys {{ key }} | head -n 2 | \
                     tail -n 1 | awk '{$1=$1};1'):{{ trust_level }}:"
       {%- else %}
             grep '{{ key }}:{{ trust_level }}:'
