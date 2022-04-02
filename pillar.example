@@ -1,34 +1,98 @@
-tool:
+# -*- coding: utf-8 -*-
+# vim: ft=yaml
+# yamllint disable rule:comments-indentation
+---
+######################################################################
+# Mind that this is to be read as an overview of available
+# settings which can be set in many different ways, not only
+# by providing pillar values.
+# The different sources will be merged. For further information,
+# please see the docs, `libmapstack.jinja` as well as the configured
+# default sources in `parameters/map_jinja.yaml`.
+#
+# This documentation will need to be updated once there is
+# some learned experience. @TODO
+######################################################################
+
+# Apart from the various source files, there are two independent source trees
+# for user-specific configuration.
+# Generally tool_gpg > tool_global.
+# `tool_global` focuses on specific users, of which most values
+# will be respected by all formulae in the `tool` suite:
+tool_global:
   users:
+
+      # The following is global configuration for the user named `user`.
     user:
-      xdg: true                         # force xdg dirs
-      # sync this user's config from a dotfiles repo available as
-      # salt://dotconfig/<user>/gpg or salt://dotconfig/gpg
+
+        # Force the usage of XDG directories for this user.
+      xdg: true
+
+        # Sync this user's config from a dotfiles repo.
+        # The available paths and their priority can be found in the
+        # rendered `config/sync.sls` file (currently, @TODO docs).
+        # Overview in descending priority:
+        # salt://dotconfig/<minion_id>/<user>/gnupg
+        # salt://dotconfig/<minion_id>/gnupg
+        # salt://dotconfig/<os_family>/<user>/gnupg
+        # salt://dotconfig/<os_family>/gnupg
+        # salt://dotconfig/default/<user>/gnupg
+        # salt://dotconfig/default/gnupg
       dotconfig:              # can be bool or mapping
         file_mode: '0600'     # default: keep destination or salt umask (new)
         dir_mode: '0700'      # default: 0700
         clean: false          # delete files in target. default: false
-      persistenv: '.config/zsh/zshenv'  # persist env vars specified in salt to this file (will be appended to file relative to $HOME)
-      rchook: '.config/zsh/zshrc'       # add runcom hooks to this file (will be appended to file relative to $HOME)
+
+        # Persist environment variables used by this formula for this
+        # user to this file (will be appended to a file relative to $HOME)
+      persistenv: '.config/zsh/zshenv'
+
+        # Add runcom hooks specific to this formula to this file
+        # for this user (will be appended to a file relative to $HOME)
+      rchook: '.config/zsh/zshrc'
+
+        # This user's configuration for this formula. Will be overridden by
+        # user-specific configuration in `tool_gpg:users`.
+        # Set this to `false` to disable configuration for this user.
       gpg:
         agent:
-          sshrc: .ssh/config          # add hook to ssh to autoreset TTY to current one on ssh launch
-          config:                     # gpg-agent.conf configuration options for this user
+            # gpg-agent.conf configuration options for this user
+          config:
             default-cache-ttl: 10
-        config:                       # gpg.conf configuration options for this user
-          charset: utf-8
-        # import pubkeys, either by file or text
-        import:
-          # specify fingerprint in raw hex, without 0x and spaces
-          # can also be keyid, but that has compromises
-          '427F11FD0FAA4B080123F01CDDFA1A3E36879494':
+              # set keys to empty values for the string without config value
+            enable-ssh-support: ''
+            max-cache-ttl: 120
+            # make sure SSH_AUTH_SOCK is getting set properly in the shellrc
+          hook: true
+            # populate sshcontrol file (keys gpg-agent uses for ssh connections)
+          sshcontrol: []
+            # add hook to ssh to autoreset TTY to current one on ssh launch
+          sshrc: .ssh/config
+          # gpg.conf configuration options for this user
+        config:
+          charset: utf8
+          keyid-format: 0xlong
+          no-greeting: ''
+          use-agent: ''
+          with-fingerprint: ''
+          # update gpg-agent.conf to use pinentry-sane
+        pinentry_sane: true
+          # automatically insert 'export PINENTRY_USER_DATA="USE_CURSES=1"'
+          # into shell rc to make shim functional
+        pinentry_update_rc: false
+          # import pubkeys, either by file or text
+        pubkeys:
+            # specify fingerprint in raw hex, without 0x and spaces
+            # can also be keyid, but that has compromises
+          427F11FD0FAA4B080123F01CDDFA1A3E36879494:
             - source: salt://gpg/keys/qubes-master-signing.asc
-            # optionally specify trust level, one of:
-            # expired, unknown, not_trusted, marginally, fully, ultimately
+              # optionally specify trust level, one of:
+              # expired, unknown, not_trusted, marginally, fully, ultimately
             - trust: ultimately
-            - type: fingerprint # or keyid, not recommended though
-          '5817A43B283DE5A9181A522E1848792F9E2795E9':
-            - text: |
+              # or keyid, not recommended though
+            - type: fingerprint
+          5817A43B283DE5A9181A522E1848792F9E2795E9:
+            - text: |-
                 -----BEGIN PGP PUBLIC KEY BLOCK-----
 
                 mQINBFi9Xv4BEADTkOlBTDmO6DsFJi754ilTFqsluGWleeProuz8Q+bHFlx0Mqtk
@@ -70,30 +134,83 @@ tool:
                 =6A62
                 -----END PGP PUBLIC KEY BLOCK-----
 
-  gpg:
-    # insert shim that switches pinentry program depending on env (terminal -> tty/curses, gui -> x11/pinentry-mac)
-    pinentry_sane:                # set to true to use defaults, don't specify or false to disable
-      terminal: tty               # when using pinentry-sane, use pinentry-tty as default interface. also possible: curses
-      path: /some/path            # save pinentry-sane somewhere else, not /usr/local/bin
+tool_gpg:
 
-    # default formula configuration for all users
-    defaults:
-      pinentry_sane: true         # update gpg-agent.conf to use pinentry-sane
-      pinentry_update_rc: false   # automatically insert 'export PINENTRY_USER_DATA="USE_CURSES=1"' into shell rc to make shim functional
-      agent:
-        sshrc: .ssh/config        # add hook to ssh to autoreset TTY to current one on ssh launch
-        sshcontrol: []            # populate sshcontrol file (keys gpg-agent uses for ssh connections)
-        config:
-          enable-ssh-support: ''  # set keys to empty values for the string without config value
-          default-cache-ttl: 60
-          max-cache-ttl: 120
-      config:
-        use-agent: ''
-        no-greeting: ''
-        keyid-format: 0xlong
-        with-fingerprint: ''
-    users:
-      user:                       # user configuration can also be specified in tool:gpg:users
-        rchook: '.bashrc'
-        gpg:
-          pinentry_sane: false
+    # Specify an explicit version (works on most Linux distributions) or
+    # keep the packages updated to their latest version on subsequent runs
+    # by leaving version empty or setting it to 'latest'
+    # (again for Linux, brew does that anyways).
+  version: latest
+    # install shim that switches pinentry program depending on env
+    # (terminal -> tty/curses, gui -> x11/pinentry-mac)
+    # path and type (tty/curses) can be customized in lookup:pinentry_sane
+  pinentry_sane: true
+
+    # Default formula configuration for all users.
+  defaults:
+    agent: default value for all users
+
+    # User configuration can also be specified here in
+    # `tool_gpg:users`. It will override
+    # configuration sourced from `tool_global:users`.
+  users:
+    user:
+      persistenv: '.bash_profile'
+      gpg:
+        agent: this overrides config from tool_globl:users
+
+######################################################################
+# The following settings define default values for this formula,
+# depending on different grains. You should not have to modify them
+# in most cases. For a full overview, see the different files
+# in `parameters`.
+######################################################################
+  lookup:
+    pkg:
+      name: gnupg
+    rootgroup: root
+    paths:
+      confdir: '.gnupg'
+      conffile: 'gpg.conf'
+      xdg_dirname: 'gnupg'
+      xdg_conffile: 'gpg.conf'
+    pinentry_sane:
+      path: /usr/local/bin/pinentry-sane
+        # when using pinentry-sane, use pinentry-tty as default interface.
+        # also possible: curses
+      terminal: tty
+
+######################################################################
+# This is where `tool` suite settings end and Salt behavior settings
+# inherited from `salt-formulas/template-formula` start. They will
+# influence how exactly the TOFS pattern is applied. Mind that
+# parts of this are disabled for `configsync.sls`.
+######################################################################
+  tofs:
+    # The files_switch key serves as a selector for alternative
+    # directories under the formula files directory. See TOFS pattern
+    # doc for more info.
+    # Note: Any value not evaluated by `config.get` will be used literally.
+    # This can be used to set custom paths, as many levels deep as required.
+    files_switch:
+      - any/path/can/be/used/here
+      - id
+      - roles
+      - osfinger
+      - os
+      - os_family
+
+    # All aspects of path/file resolution are customisable using the options below.
+    # This is unnecessary in most cases; there are sensible defaults.
+    # Default path: salt://< path_prefix >/< dirs.files >/< dirs.default >
+    # I.e.: salt://tool_gpg/files/default
+    # path_prefix: template_alt
+    # dirs:
+    #   files: files_alt
+    #   default: default_alt
+    # The entries under `source_files` are prepended to the default source files
+    # given for the state
+    source_files:
+      GnuPG config file is managed for user 'user':
+        - 'gpg.conf'
+        - 'gpg.conf.jinja'

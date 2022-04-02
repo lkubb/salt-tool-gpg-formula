@@ -1,0 +1,23 @@
+# -*- coding: utf-8 -*-
+# vim: ft=yaml
+#
+# Set default values.
+---
+values:
+  lookup:
+    pkg:
+      name: gnupg
+      misc: []
+    paths:
+      confdir: '.gnupg'
+      conffile: 'gpg.conf'
+      xdg_dirname: 'gnupg'
+      xdg_conffile: 'gpg.conf'
+    rootgroup: root
+    pinentry_sane:
+      path: /usr/local/bin/pinentry-sane
+      terminal: tty
+  # Just here for testing
+  added_in_defaults: defaults_value
+  winner: defaults
+...

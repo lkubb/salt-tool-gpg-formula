@@ -1,0 +1,91 @@
+{
+  "template": "https://github.com/lkubb/salt-tool-template-formula",
+  "commit": "81579622a4e3b5971367e10219c7477e0e1448d3",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "_extensions": [
+        "local_extensions.YAMLDumper"
+      ],
+      "_jinja2_env_vars": {
+        "block_start_string": "{!",
+        "block_end_string": "!}",
+        "variable_start_string": "{=",
+        "variable_end_string": "=}",
+        "comment_start_string": "{@",
+        "comment_end_string": "@}"
+      },
+      "name": "GnuPG",
+      "abbr": "gpg",
+      "abbr_pysafe": "gpg",
+      "pkg": "gnupg",
+      "modstate": "n",
+      "needs_repo": "n",
+      "has_service": "n",
+      "mac_library": "n",
+      "mac_cask": "n",
+      "has_xdg": "y",
+      "needs_xdg_help": "y",
+      "has_conffile_only": "n",
+      "default_confdir": ".gnupg",
+      "default_confdir_mac": ".gnupg",
+      "default_conffile": "gpg.conf",
+      "xdg_dirname": "gnupg",
+      "xdg_conffile": "gpg.conf",
+      "has_configsync": "y",
+      "has_config_template": "y",
+      "has_tests": "y",
+      "git_username": "lkubb",
+      "_lookup": {
+        "pinentry_sane": {
+          "path": "/usr/local/bin/pinentry-sane",
+          "terminal": "tty"
+        }
+      },
+      "_settings": {
+        "pinentry_sane": true
+      },
+      "_usersettings": {
+        "agent": {
+          "config": {
+            "default-cache-ttl": 10,
+            "enable-ssh-support": "",
+            "max-cache-ttl": 120
+          },
+          "hook": true,
+          "sshcontrol": [],
+          "sshrc": ".ssh/config"
+        },
+        "config": {
+          "charset": "utf8",
+          "keyid-format": "0xlong",
+          "no-greeting": "",
+          "use-agent": "",
+          "with-fingerprint": ""
+        },
+        "pinentry_sane": true,
+        "pinentry_update_rc": false,
+        "pubkeys": {
+          "427F11FD0FAA4B080123F01CDDFA1A3E36879494": [
+            {
+              "source": "salt://gpg/keys/qubes-master-signing.asc"
+            },
+            {
+              "trust": "ultimately"
+            },
+            {
+              "type": "fingerprint"
+            }
+          ],
+          "5817A43B283DE5A9181A522E1848792F9E2795E9": [
+            {
+              "text": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\n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\ndcBETivefvOIZRjSyZYUTg==\n=6A62\n-----END PGP PUBLIC KEY BLOCK-----"
+            }
+          ]
+        }
+      },
+      "_template": "https://github.com/lkubb/salt-tool-template-formula"
+    }
+  },
+  "directory": null
+}

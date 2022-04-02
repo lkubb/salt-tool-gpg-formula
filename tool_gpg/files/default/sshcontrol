@@ -1,0 +1,3 @@
+{%- for keygrip in user.gpg.agent.sshcontrol %}
+{{ keygrip }}
+{%- endfor %}

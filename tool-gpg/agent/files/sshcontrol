@@ -1,3 +1,0 @@
-{%- for key in keygrips %}
-{{ key }}
-{%- endfor %}
