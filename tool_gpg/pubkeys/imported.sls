@@ -39,6 +39,11 @@ Key file '{{ key }}' is present for user '{{ user.name }}':
     - user: {{ user.name }}
     - group: {{ user.group }}
     - makedirs: true
+    - unless:
+      - fun: gpg.get_key
+        {{ type }}: {{ key }}
+        user: {{ user.name }}
+        gnupghome: {{ user._gpg.confdir }}
     - require:
       - sls: {{ sls_package_install }}
 
