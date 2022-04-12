@@ -9,6 +9,7 @@
 include:
   - {{ sls_config_clean }}
 
+
 GnuPG is removed:
   pkg.removed:
     - name: {{ gpg.lookup.pkg.name }}

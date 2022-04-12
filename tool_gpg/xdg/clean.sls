@@ -6,7 +6,7 @@
 {%- from tplroot ~ "/map.jinja" import mapdata as gpg with context %}
 
 
-{%- for user in gpg.users | rejectattr('xdg', 'sameas', False) %}
+{%- for user in gpg.users | rejectattr('xdg', 'sameas', false) %}
 
 {%-   set user_default_conf = user.home | path_join(gpg.lookup.paths.confdir) %}
 {%-   set user_xdg_confdir = user.xdg.config | path_join(gpg.lookup.paths.xdg_dirname) %}

@@ -70,12 +70,13 @@ The following shows an example of ``tool_gpg`` per-user configuration. If provid
 .. code-block:: yaml
 
   user:
+
       # Force the usage of XDG directories for this user.
     xdg: true
 
       # Sync this user's config from a dotfiles repo.
       # The available paths and their priority can be found in the
-      # rendered `configsync.sls` file (currently, @TODO docs).
+      # rendered `config/sync.sls` file (currently, @TODO docs).
       # Overview in descending priority:
       # salt://dotconfig/<minion_id>/<user>/gnupg
       # salt://dotconfig/<minion_id>/gnupg
