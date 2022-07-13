@@ -40,11 +40,11 @@ Key '{{ key }}' trust level is managed for user '{{ user.name }}':
         echo '{{ key }}:{{ trust_level }}' | \
 
 {%-       endif %}
-          gpg --import-ownertrust --homedir '{{ user._gpg.confdir }}'
+          gpg --import-ownertrust --homedir '{{ user._gpg.datadir }}'
     - runas: {{ user.name }}
     - unless:
       - |
-          sudo -u {{ user.name }} gpg --homedir '{{ user._gpg.confdir }}' --export-ownertrust | \
+          sudo -u {{ user.name }} gpg --homedir '{{ user._gpg.datadir }}' --export-ownertrust | \
 {%-       if 'keyid' == type %}
             grep "$(gpg --list-keys {{ key }} | head -n 2 | \
                     tail -n 1 | awk '{$1=$1};1'):{{ trust_level }}:"

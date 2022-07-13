@@ -44,11 +44,13 @@ state: {{ salt['cmd.run']('[ -n "$XDG_STATE_HOME" ] && echo "${XDG_STATE_HOME}" 
     {%- do users[user]['_gpg'].update({
         'confdir': xdg.config | path_join(mapdata.lookup.paths.xdg_dirname),
         'conffile': xdg.config | path_join(mapdata.lookup.paths.xdg_dirname, mapdata.lookup.paths.xdg_conffile),
+        'datadir': xdg.data | path_join(mapdata.lookup.paths.xdg_dirname),
     }) -%}
   {%- else -%}
     {%- do users[user]['_gpg'].update({
         'confdir': users[user].home | path_join(mapdata.lookup.paths.confdir),
         'conffile': users[user].home | path_join(mapdata.lookup.paths.confdir, mapdata.lookup.paths.conffile),
+        'datadir': users[user].home | path_join(mapdata.lookup.paths.confdir),
     }) -%}
   {%- endif -%}
 

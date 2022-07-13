@@ -26,7 +26,7 @@ include:
 
 Key file '{{ key }}' is present for user '{{ user.name }}':
   file.managed:
-    - name: {{ user._gpg.confdir | path_join('imports', key ~ '.gpg') }}
+    - name: {{ user._gpg.datadir | path_join('imports', key ~ '.gpg') }}
 {%-     if config.get('source') %}
     - source: {{ config.source }}
     - skip_verify: true
@@ -43,21 +43,21 @@ Key file '{{ key }}' is present for user '{{ user.name }}':
       - fun: gpg.get_key
         {{ type }}: {{ key }}
         user: {{ user.name }}
-        gnupghome: {{ user._gpg.confdir }}
+        gnupghome: {{ user._gpg.datadir }}
     - require:
       - sls: {{ sls_package_install }}
 
 Key '{{ key }}' is present for user '{{ user.name }}':
   module.run:
     - gpg.import_key:
-      - filename: {{ user._gpg.confdir }}/imports/{{ key }}.gpg
+      - filename: {{ user._gpg.datadir }}/imports/{{ key }}.gpg
       - user: {{ user.name }}
-      - gnupghome: {{ user._gpg.confdir }}
+      - gnupghome: {{ user._gpg.datadir }}
     - unless:
       - fun: gpg.get_key
         {{ type }}: {{ key }}
         user: {{ user.name }}
-        gnupghome: {{ user._gpg.confdir }}
+        gnupghome: {{ user._gpg.datadir }}
     - require:
       - Key file '{{ key }}' is present for user '{{ user.name }}'
 
@@ -66,7 +66,7 @@ Key '{{ key }}' is actually present (verify source poorly) for user '{{ user.nam
     - gpg.get_key:
       - {{ type }}: {{ key }}
       - user: {{ user.name }}
-      - gnupghome: {{ user._gpg.confdir }}
+      - gnupghome: {{ user._gpg.datadir }}
     - require:
       - Key '{{ key }}' is present for user '{{ user.name }}'
 {%-   endfor %}
