@@ -41,7 +41,7 @@ The fix for both problems is to teach OpenSSH to autostart ``gpg-agent`` in its 
 
 So just before every single connection, OpenSSH updates the ``gpg-agent`` default tty to the current one. If the agent was not running already, it is started as well. This workaround needs ``GPG_TTY=$(tty)`` to succeed.
 
-..note::
+.. note::
 
   You will also need to ``export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"`` somewhere in your shell runcom.
 
