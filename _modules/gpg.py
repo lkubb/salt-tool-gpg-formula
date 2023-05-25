@@ -24,6 +24,7 @@ import salt.utils.immutabletypes as immutabletypes
 import salt.utils.path
 import salt.utils.platform
 import salt.utils.stringutils
+import salt.utils.versions
 from salt.exceptions import SaltInvocationError
 
 log = logging.getLogger(__name__)
@@ -1384,12 +1385,9 @@ def verify(
         # This ensures all signatures are evaluated for validity.
         extra_args.append("--no-batch")
         # workaround https://github.com/vsajip/python-gnupg/issues/214
-        # Until the issue is resolved, bad signatures would not actually be
-        # included in `sig_info`, but override the previous one's information
-        # (the same would be valid for signatures with missing pubkeys).
-        # `keyid`, `username` and `status` would always be overwritten,
-        # while missing pubkeys would also overwrite `fingerprint`.
-        gpg.result_map["verify"] = FixedVerify
+        # This issue should be fixed in versions greater than 0.5.0.
+        if salt.utils.versions.version_cmp(gnupg.__version__, "0.5.0") <= 0:
+            gpg.result_map["verify"] = FixedVerify
 
     if text:
         verified = gpg.verify(text, extra_args=extra_args)
