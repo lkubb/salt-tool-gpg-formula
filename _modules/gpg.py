@@ -22,6 +22,7 @@ import salt.utils.data
 import salt.utils.files
 import salt.utils.immutabletypes as immutabletypes
 import salt.utils.path
+import salt.utils.platform
 import salt.utils.stringutils
 from salt.exceptions import SaltInvocationError
 
@@ -149,11 +150,24 @@ def _get_user_gnupghome(user):
     Return default GnuPG home directory path for a user
     """
     if user == "salt":
-        gnupghome = os.path.join(__salt__["config.get"]("config_dir"), "gpgkeys")
-    else:
-        gnupghome = os.path.join(_get_user_info(user)["home"], ".gnupg")
+        return os.path.join(__salt__["config.get"]("config_dir"), "gpgkeys")
 
-    return gnupghome
+    # Try to respect GNUPGHOME environment variable.
+    # This does not resolve `~` since that potentially complicates things a lot.
+    if user is None:
+        gnupghome_env = __salt__["environ.get"]("GNUPGHOME")
+    else:
+        cmd = 'echo -n "$GNUPGHOME"'
+        if salt.utils.platform.is_windows():
+            cmd = "echo %GNUPGHOME%"
+        gnupghome_env = __salt__["cmd.run_stdout"](
+            cmd, python_shell=True, runas=user
+        ).strip()
+        if gnupghome_env.startswith("~"):
+            log.warning("Found GNUPGHOME beginning with tilde, ignoring")
+            gnupghome_env = ""
+
+    return gnupghome_env or os.path.join(_get_user_info(user)["home"], ".gnupg")
 
 
 def _restore_ownership(func):
