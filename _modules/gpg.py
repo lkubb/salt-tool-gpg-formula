@@ -169,25 +169,22 @@ def _restore_ownership(func):
         userinfo = _get_user_info(user)
         run_user = _get_user_info()
 
+        if not os.path.exists(gnupghome):
+            _create_gnupghome(user, gnupghome)
+
         if userinfo["uid"] != run_user["uid"]:
-            group = None
-            if os.path.exists(gnupghome):
-                # Given user is different from one who runs Salt process,
-                # need to fix ownership permissions for GnuPG home dir
-                group = __salt__["file.gid_to_group"](run_user["gid"])
-                for path in [gnupghome] + __salt__["file.find"](gnupghome):
-                    __salt__["file.chown"](path, run_user["name"], group)
+            # Given user is different from one who runs Salt process,
+            # need to fix ownership permissions for GnuPG home dir
+            group = __salt__["file.gid_to_group"](run_user["gid"])
+            for path in [gnupghome] + __salt__["file.find"](gnupghome):
+                __salt__["file.chown"](path, run_user["name"], group)
             if keyring and os.path.exists(keyring):
-                if group is None:
-                    group = __salt__["file.gid_to_group"](run_user["gid"])
                 __salt__["file.chown"](keyring, run_user["name"], group)
 
         # Filter special kwargs
-        for key in list(kwargs):
-            if key.startswith("__"):
-                del kwargs[key]
+        filtered_kwargs = {k: v for k, v in kwargs.items() if not k.startswith("__")}
 
-        ret = func(*args, **kwargs)
+        ret = func(*args, **filtered_kwargs)
 
         if userinfo["uid"] != run_user["uid"]:
             group = __salt__["file.gid_to_group"](userinfo["gid"])
@@ -212,9 +209,23 @@ def _create_gpg(user=None, gnupghome=None, keyring=None):
             "Please pass keyring as a string. Multiple keyrings are not allowed"
         )
 
-    gpg = gnupg.GPG(gnupghome=gnupghome, keyring=keyring)
+    try:
+        gpg = gnupg.GPG(gnupghome=gnupghome, keyring=keyring)
+    except ValueError as err:
+        if not str(err).startswith("gnupghome should be a directory"):
+            raise
+        _create_gnupghome(user, gnupghome)
+        gpg = gnupg.GPG(gnupghome=gnupghome, keyring=keyring)
 
     return gpg
+
+
+def _create_gnupghome(user, gnupghome):
+    user_info = _get_user_info(user)
+    primary_group = __salt__["file.gid_to_group"](user_info["gid"])
+    __salt__["file.mkdir"](
+        gnupghome, user=user_info["name"], group=primary_group, mode="0700"
+    )
 
 
 def _list_keys(secret=False, user=None, gnupghome=None, keyring=None):
