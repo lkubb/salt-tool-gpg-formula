@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # vim: ft=yaml
 ---
 tool_global:
@@ -87,6 +86,7 @@ tool_gpg:
       conffile: 'gpg.conf'
       xdg_dirname: 'gnupg'
       xdg_conffile: 'gpg.conf'
+    rootgroup: root
     pinentry_sane:
       path: /usr/local/bin/pinentry-sane
       terminal: tty

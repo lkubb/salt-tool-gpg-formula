@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
+{%- set tplroot = tpldir.split("/")[0] %}
 {%- from tplroot ~ "/map.jinja" import mapdata as gpg with context %}
 
 include:
   - {{ tplroot }}.package
 
 
-{%- for user in gpg.users | rejectattr('xdg', 'sameas', false) %}
+{%- for user in gpg.users | rejectattr("xdg", "sameas", false) %}
 
 {%-   set user_default_conf = user.home | path_join(gpg.lookup.paths.confdir) %}
 {%-   set user_xdg_confdir = user.xdg.config | path_join(gpg.lookup.paths.xdg_dirname) %}
@@ -105,7 +104,7 @@ GnuPG uses XDG dirs during this salt run:
     - require_in:
       - GnuPG setup is completed
 
-{%-   if user.get('persistenv') %}
+{%-   if user.get("persistenv") %}
 
 persistenv file for GnuPG exists for user '{{ user.name }}':
   file.managed:

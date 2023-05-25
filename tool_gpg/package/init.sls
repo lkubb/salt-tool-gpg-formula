@@ -1,5 +1,8 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
+
+{#-
+    Installs the GnuPG package only.
+#}
 
 include:
   - .install

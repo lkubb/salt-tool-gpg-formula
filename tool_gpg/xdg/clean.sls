@@ -1,11 +1,14 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
+{#-
+    Removes GnuPG XDG compatibility crutches for all managed users.
+#}
+
+{%- set tplroot = tpldir.split("/")[0] %}
 {%- from tplroot ~ "/map.jinja" import mapdata as gpg with context %}
 
 
-{%- for user in gpg.users | rejectattr('xdg', 'sameas', false) %}
+{%- for user in gpg.users | rejectattr("xdg", "sameas", false) %}
 
 {%-   set user_default_conf = user.home | path_join(gpg.lookup.paths.confdir) %}
 {%-   set user_xdg_confdir = user.xdg.config | path_join(gpg.lookup.paths.xdg_dirname) %}
@@ -28,7 +31,7 @@ GnuPG does not use XDG dirs during this salt run:
         CONF: false
     - false_unsets: true
 
-{%-   if user.get('persistenv') %}
+{%-   if user.get("persistenv") %}
 
 GnuPG is ignorant about XDG location for user '{{ user.name }}':
   file.replace:
