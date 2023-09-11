@@ -1072,12 +1072,14 @@ def receive_keys(keyserver=None, keys=None, user=None, gnupghome=None, keyring=N
                             f"Key {result['fingerprint']} already exists in keychain"
                         )
                 elif "problem" in result:
-                    ret["message"].append("Unable to add key to keychain")
-        elif not bool(recv_data):
+                    ret["message"].append(
+                        f"Unable to add key to keychain: {result.get('text', 'No further description')}"
+                    )
+
+        if not bool(recv_data):
             ret["res"] = False
-            ret["message"] = [
-                f"Something went wrong during gpg call: {recv_data.stderr}"
-            ]
+            ret["message"].append(f"GPG reported failure: {recv_data.stderr}")
+
     except AttributeError:
         ret["res"] = False
         ret["message"] = ["Invalid return from python-gpg"]
