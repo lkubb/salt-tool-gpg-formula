@@ -403,6 +403,7 @@ def _render_key(_key):
         tmp["expires"] = time.strftime(
             "%Y-%m-%d", time.localtime(float(_key["expires"]))
         )
+        tmp["expired"] = time.time() >= float(expires)
     if date:
         tmp["created"] = time.strftime("%Y-%m-%d", time.localtime(float(_key["date"])))
     if length:

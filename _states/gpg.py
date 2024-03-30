@@ -40,7 +40,8 @@ def present(
     **kwargs,
 ):
     """
-    Ensure a GPG public key is present in the GPG keychain.
+    Ensure a GPG public key is present in the GPG keychain and
+    that it is not expired.
 
     name
         The key ID of the GPG public key.
@@ -118,10 +119,13 @@ def present(
     )
 
     current_keys = {}
+    expired_keys = []
     for key in _current_keys:
         keyid = key["keyid"]
         current_keys[keyid] = {}
         current_keys[keyid]["trust"] = key["trust"]
+        if key.get("expired"):
+            expired_keys.append(keyid)
 
     if not keys:
         keys = name
@@ -172,29 +176,46 @@ def present(
                     ret["comment"].append(f"Invalid trust level {trust}")
 
             ret["comment"].append(f"GPG Public Key {key} already in keychain")
+            if key in expired_keys:
+                ret["comment"][-1] += ", but expired"
 
-        else:
+        if key not in current_keys or key in expired_keys:
+            refresh = key in expired_keys
             if __opts__["test"]:
                 ret["result"] = None
                 ret["comment"].append(f"Would have added {key} to GPG keychain")
                 salt.utils.dictupdate.set_dict_key_value(
                     ret, f"changes:{key}:added", True
                 )
+                if refresh:
+                    ret["comment"][-1] += " since the present one is expired"
+                    salt.utils.dictupdate.set_dict_key_value(
+                        ret, f"changes:{key}:refresh", True
+                    )
                 continue
             result = {}
             if text:
                 has_key = __salt__["gpg.read_key"](
                     text=text, keyid=key, gnupghome=gnupghome, user=user
                 )
+                is_expired = has_key.get("expired")
                 if has_key:
-                    log.debug(f"Passed text contains key {key}")
-                    result = __salt__["gpg.import_key"](
-                        text=text,
-                        user=user,
-                        gnupghome=gnupghome,
-                        keyring=keyring,
-                        select=key,
-                    )
+                    if not is_expired:
+                        log.debug(f"Passed text contains key {key}")
+                        result = __salt__["gpg.import_key"](
+                            text=text,
+                            user=user,
+                            gnupghome=gnupghome,
+                            keyring=keyring,
+                            select=key,
+                        )
+                    else:
+                        result = {
+                            "res": False,
+                            "message": [
+                                "Passed text contained the key, but it's expired"
+                            ],
+                        }
                 else:
                     result = {
                         "res": False,
@@ -219,16 +240,22 @@ def present(
                             has_key = __salt__["gpg.read_key"](
                                 path=sfn, keyid=key, gnupghome=gnupghome, user=user
                             )
+                            is_expired = has_key.get("expired")
                             if has_key:
-                                log.debug(f"Found source {src} contains key {key}")
-                                result = __salt__["gpg.import_key"](
-                                    filename=sfn,
-                                    user=user,
-                                    gnupghome=gnupghome,
-                                    keyring=keyring,
-                                    select=key,
-                                )
-                                break
+                                if not is_expired:
+                                    log.debug(f"Found source {src} contains key {key}")
+                                    result = __salt__["gpg.import_key"](
+                                        filename=sfn,
+                                        user=user,
+                                        gnupghome=gnupghome,
+                                        keyring=keyring,
+                                        select=key,
+                                    )
+                                    break
+                                else:
+                                    log.warning(
+                                        f"Found source {src} contains key {key}, but it's expired"
+                                    )
                     else:
                         prev_msg = ""
                         if result:
@@ -237,19 +264,37 @@ def present(
                             "res": False,
                             "message": [
                                 prev_msg
-                                + f"none of the specified sources were found or contained the key {key}."
+                                + f"none of the specified sources were found or contained the (unexpired) key {key}."
                             ],
                         }
+            key_is_present = refresh
+            if result["res"] is True:
+                new_key = __salt__["gpg.get_key"](
+                    keyid=key, user=user, gnupghome=gnupghome, keyring=keyring
+                )
+                key_is_present = bool(new_key)
+                if not key_is_present:
+                    result["res"] = False
+                    result["message"].append("The new key could not be found though.")
+                elif new_key.get("expired"):
+                    result["res"] = False
+                    result["message"].append("The new key is expired though")
+                else:
+                    ret["comment"].append(f"Added {key} to GPG keychain")
+                    salt.utils.dictupdate.set_dict_key_value(
+                        ret, f"changes:{key}:added", True
+                    )
+                    if refresh:
+                        ret["comment"][-1] += " since the present one is expired"
+                        salt.utils.dictupdate.set_dict_key_value(
+                            ret, f"changes:{key}:refresh", True
+                        )
+
             if result["res"] is False:
                 ret["result"] = result["res"]
                 ret["comment"].extend(result["message"])
-            else:
-                ret["comment"].append(f"Added {key} to GPG keychain")
-                salt.utils.dictupdate.set_dict_key_value(
-                    ret, f"changes:{key}:added", True
-                )
 
-            if trust:
+            if key_is_present and trust:
                 if trust in TRUST_MAP:
                     try:
                         # update trust level
