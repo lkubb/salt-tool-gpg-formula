@@ -10,6 +10,13 @@ Manage GPG keychains and keys, sign and encrypt text and files.
     Be aware that the alternate ``gnupg`` and ``pretty-bad-protocol``
     libraries are not supported.
 
+.. versionchanged:: 3008.0
+
+    When ``gnupghome`` is not set explicitly, this module now tries to
+    respect a custom ``GNUPGHOME`` environmental variable.
+    If a ``user`` is not passed, the current process' environment is queried,
+    otherwise the user's configured shell environment is taken as a reference
+    in the same way the ``cmd`` modules operate.
 """
 
 import functools
@@ -131,16 +138,24 @@ def _get_user_info(user=None):
     """
     Wrapper for user.info Salt function
     """
+    user_from_config = False
     if not user:
-        # Get user Salt running as
+        # Get user Salt is running as
         user = __salt__["config.option"]("user")
+        # Ensure we don't get an infinite loop when `salt` is returned as the user,
+        # but it does not exist for some reason.
+        user_from_config = True
+        if salt.utils.platform.is_windows() and "\\" in user:
+            # At least in the test suite, this config option is set
+            # including the hostname, so split it off
+            user = user.split("\\", maxsplit=1)[1]
 
     userinfo = __salt__["user.info"](user)
 
     if not userinfo:
-        if user == "salt":
+        if user == "salt" and not user_from_config:
             # Special case with `salt` user:
-            # if it doesn't exist then fall back to user Salt running as
+            # if it doesn't exist then fall back to user Salt is running as
             userinfo = _get_user_info()
         else:
             raise SaltInvocationError(f"User {user} does not exist")
@@ -156,7 +171,6 @@ def _get_user_gnupghome(user):
         return os.path.join(__salt__["config.get"]("config_dir"), "gpgkeys")
 
     # Try to respect GNUPGHOME environment variable.
-    # This does not resolve `~` since that potentially complicates things a lot.
     if user is None:
         gnupghome_env = __salt__["environ.get"]("GNUPGHOME")
     else:
@@ -167,6 +181,8 @@ def _get_user_gnupghome(user):
             cmd, python_shell=True, runas=user
         ).strip()
         if gnupghome_env.startswith("~"):
+            # This does not resolve `~` since that potentially complicates things a lot.
+            # It should have been resolved by the shell anyways.
             log.warning("Found GNUPGHOME beginning with tilde, ignoring")
             gnupghome_env = ""
 
@@ -192,11 +208,14 @@ def _restore_ownership(func):
         if userinfo["uid"] != run_user["uid"]:
             # Given user is different from one who runs Salt process,
             # need to fix ownership permissions for GnuPG home dir
-            group = __salt__["file.gid_to_group"](run_user["gid"])
             for path in [gnupghome] + __salt__["file.find"](gnupghome):
-                __salt__["file.chown"](path, run_user["name"], group)
+                __salt__["file.chown"](
+                    path, user=run_user["uid"], group=run_user["gid"]
+                )
             if keyring and os.path.exists(keyring):
-                __salt__["file.chown"](keyring, run_user["name"], group)
+                __salt__["file.chown"](
+                    keyring, user=run_user["uid"], group=run_user["gid"]
+                )
 
         # Filter special kwargs
         filtered_kwargs = {k: v for k, v in kwargs.items() if not k.startswith("__")}
@@ -204,11 +223,14 @@ def _restore_ownership(func):
         ret = func(*args, **filtered_kwargs)
 
         if userinfo["uid"] != run_user["uid"]:
-            group = __salt__["file.gid_to_group"](userinfo["gid"])
             for path in [gnupghome] + __salt__["file.find"](gnupghome):
-                __salt__["file.chown"](path, user, group)
+                __salt__["file.chown"](
+                    path, user=userinfo["uid"], group=userinfo["gid"]
+                )
             if keyring and os.path.exists(keyring):
-                __salt__["file.chown"](keyring, user, group)
+                __salt__["file.chown"](
+                    keyring, user=userinfo["uid"], group=userinfo["gid"]
+                )
         return ret
 
     return func_wrapper
@@ -239,9 +261,8 @@ def _create_gpg(user=None, gnupghome=None, keyring=None):
 
 def _create_gnupghome(user, gnupghome):
     user_info = _get_user_info(user)
-    primary_group = __salt__["file.gid_to_group"](user_info["gid"])
     __salt__["file.mkdir"](
-        gnupghome, user=user_info["name"], group=primary_group, mode="0700"
+        gnupghome, user=user_info["uid"], group=user_info["gid"], mode="0700"
     )
 
 
@@ -302,23 +323,7 @@ def search_keys(text, keyserver=None, user=None, gnupghome=None):
 
     _keys = []
     for _key in _search_keys(text, keyserver, user=user, gnupghome=gnupghome):
-        tmp = {"keyid": _key["keyid"], "uids": _key["uids"]}
-
-        expires = _key.get("expires", None)
-        date = _key.get("date", None)
-        length = _key.get("length", None)
-
-        if expires:
-            tmp["expires"] = time.strftime(
-                "%Y-%m-%d", time.localtime(float(_key["expires"]))
-            )
-        if date:
-            tmp["created"] = time.strftime(
-                "%Y-%m-%d", time.localtime(float(_key["date"]))
-            )
-        if length:
-            tmp["keyLength"] = _key["length"]
-        _keys.append(tmp)
+        _keys.append(_render_key(_key))
     return _keys
 
 
@@ -389,9 +394,10 @@ def list_secret_keys(user=None, gnupghome=None, keyring=None):
 def _render_key(_key):
     tmp = {
         "keyid": _key["keyid"],
-        "fingerprint": _key["fingerprint"],
         "uids": _key["uids"],
     }
+    if "fingerprint" in _key:
+        tmp["fingerprint"] = _key["fingerprint"]
 
     expires = _key.get("expires", None)
     date = _key.get("date", None)
@@ -653,9 +659,9 @@ def delete_key(
         if skey:
             if not delete_secret:
                 ret["res"] = False
-                ret[
-                    "message"
-                ] = "Secret key exists, delete first or pass delete_secret=True."
+                ret["message"] = (
+                    "Secret key exists, delete first or pass delete_secret=True."
+                )
                 return ret
             else:
                 out = __delete_key(fingerprint, True, use_passphrase)
@@ -664,9 +670,9 @@ def delete_key(
                     ret["message"] = f"Secret key for {fingerprint} deleted\n"
                 else:
                     ret["res"] = False
-                    ret[
-                        "message"
-                    ] = f"Failed to delete secret key for {fingerprint}: {out}"
+                    ret["message"] = (
+                        f"Failed to delete secret key for {fingerprint}: {out}"
+                    )
                     return ret
 
         # Delete the public key
@@ -718,41 +724,14 @@ def get_key(keyid=None, fingerprint=None, user=None, gnupghome=None, keyring=Non
         salt '*' gpg.get_key keyid=3FAD9F1E user=username
 
     """
-    tmp = {}
     for _key in _list_keys(user=user, gnupghome=gnupghome, keyring=keyring):
         if (
             _key["fingerprint"] == fingerprint
             or _key["keyid"] == keyid
             or _key["keyid"][8:] == keyid
         ):
-            tmp["keyid"] = _key["keyid"]
-            tmp["fingerprint"] = _key["fingerprint"]
-            tmp["uids"] = _key["uids"]
-
-            expires = _key.get("expires", None)
-            date = _key.get("date", None)
-            length = _key.get("length", None)
-            owner_trust = _key.get("ownertrust", None)
-            trust = _key.get("trust", None)
-
-            if expires:
-                tmp["expires"] = time.strftime(
-                    "%Y-%m-%d", time.localtime(float(_key["expires"]))
-                )
-            if date:
-                tmp["created"] = time.strftime(
-                    "%Y-%m-%d", time.localtime(float(_key["date"]))
-                )
-            if length:
-                tmp["keyLength"] = _key["length"]
-            if owner_trust:
-                tmp["ownerTrust"] = LETTER_TRUST_DICT[_key["ownertrust"]]
-            if trust:
-                tmp["trust"] = LETTER_TRUST_DICT[_key["trust"]]
-    if not tmp:
-        return False
-    else:
-        return tmp
+            return _render_key(_key)
+    return False
 
 
 def get_secret_key(
@@ -792,7 +771,6 @@ def get_secret_key(
         salt '*' gpg.get_secret_key keyid=3FAD9F1E user=username
 
     """
-    tmp = {}
     for _key in _list_keys(
         user=user, gnupghome=gnupghome, keyring=keyring, secret=True
     ):
@@ -801,34 +779,8 @@ def get_secret_key(
             or _key["keyid"] == keyid
             or _key["keyid"][8:] == keyid
         ):
-            tmp["keyid"] = _key["keyid"]
-            tmp["fingerprint"] = _key["fingerprint"]
-            tmp["uids"] = _key["uids"]
-
-            expires = _key.get("expires", None)
-            date = _key.get("date", None)
-            length = _key.get("length", None)
-            owner_trust = _key.get("ownertrust", None)
-            trust = _key.get("trust", None)
-
-            if expires:
-                tmp["expires"] = time.strftime(
-                    "%Y-%m-%d", time.localtime(float(_key["expires"]))
-                )
-            if date:
-                tmp["created"] = time.strftime(
-                    "%Y-%m-%d", time.localtime(float(_key["date"]))
-                )
-            if length:
-                tmp["keyLength"] = _key["length"]
-            if owner_trust:
-                tmp["ownerTrust"] = LETTER_TRUST_DICT[_key["ownertrust"]]
-            if trust:
-                tmp["trust"] = LETTER_TRUST_DICT[_key["trust"]]
-    if not tmp:
-        return False
-    else:
-        return tmp
+            return _render_key(_key)
+    return False
 
 
 @_restore_ownership
@@ -1502,9 +1454,11 @@ def verify(
             "username": sig.get("username"),
             "key_id": sig["keyid"],
             "fingerprint": sig["pubkey_fingerprint"],
-            "trust_level": VERIFY_TRUST_LEVELS[str(sig["trust_level"])]
-            if "trust_level" in sig
-            else None,
+            "trust_level": (
+                VERIFY_TRUST_LEVELS[str(sig["trust_level"])]
+                if "trust_level" in sig
+                else None
+            ),
             "status": sig["status"],
         }
         for sig in verified.sig_info.values()
@@ -1532,9 +1486,9 @@ def verify(
 
         if not any_signed:
             ret["res"] = False
-            ret[
-                "message"
-            ] = "None of the public keys listed in signed_by_any provided a valid signature"
+            ret["message"] = (
+                "None of the public keys listed in signed_by_any provided a valid signature"
+            )
             return ret
         any_check = True
 
@@ -1552,9 +1506,9 @@ def verify(
             except (KeyError, IndexError):
                 pass
             ret["res"] = False
-            ret[
-                "message"
-            ] = f"Public key {signer} has not provided a valid signature, but was listed in signed_by_all"
+            ret["message"] = (
+                f"Public key {signer} has not provided a valid signature, but was listed in signed_by_all"
+            )
             return ret
         all_check = True
 
@@ -1564,9 +1518,9 @@ def verify(
         return ret
 
     ret["res"] = False
-    ret[
-        "message"
-    ] = "Something went wrong while checking for specific signers. This is most likely a bug"
+    ret["message"] = (
+        "Something went wrong while checking for specific signers. This is most likely a bug"
+    )
     return ret
 
 
