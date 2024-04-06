@@ -1103,6 +1103,14 @@ def receive_keys(keyserver=None, keys=None, user=None, gnupghome=None, keyring=N
                         ret["message"].append(
                             f"Key {result['fingerprint']} already exists in keychain"
                         )
+                    elif result["ok"] == "4":
+                        ret["message"].append(
+                            f"Key {result['fingerprint']} updated: new signatures"
+                        )
+                    elif result["ok"] == "8":
+                        ret["message"].append(
+                            f"Key {result['fingerprint']} updated: new subkeys"
+                        )
                 elif "problem" in result:
                     ret["message"].append(
                         f"Unable to add key to keychain: {result.get('text', 'No further description')}"

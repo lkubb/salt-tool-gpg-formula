@@ -179,12 +179,19 @@ def present(
                         gnupghome=gnupghome,
                         keyring=keyring,
                     )
+                    if refresh and result["res"]:
+                        # If we're refreshing and no updated key could be found,
+                        # ensure we're failing here.
+                        result["res"] = any(
+                            "updated: new" in x for x in result["message"]
+                        )
+                    result["message"] = "\n".join(result["message"])
                 if (not result or result["res"] is False) and source:
                     if not isinstance(source, list):
                         source = [source]
                     prev_msg = ""
                     if result:
-                        prev_msg = result["message"] + ". In addition, "
+                        prev_msg = result["message"] + "\n"
                     for src in source:
                         sfn = __salt__["cp.cache_file"](src)
                         if sfn:
@@ -215,12 +222,12 @@ def present(
             if not new_key:
                 raise CommandExecutionError(
                     result["message"]
-                    + f" - The new key {key} could not be retrieved though."
+                    + f"\nThe new key {key} could not be retrieved though."
                 )
             salt.utils.dictupdate.set_dict_key_value(ret, f"changes:{key}:added", True)
             if new_key.get("expired"):
                 raise CommandExecutionError(
-                    result["message"] + f" - The new key {key} is expired though."
+                    result["message"] + f"\nThe new key {key} is expired though."
                 )
             key_res[key].append(f"Added {key} to GPG keychain")
             current_keys[key] = {"trust": new_key["trust"]}
@@ -231,7 +238,11 @@ def present(
                 )
         except (CommandExecutionError, SaltInvocationError) as err:
             ret["result"] = False
-            key_res[key].append(str(err))
+            if refresh:
+                key_res[key].append(
+                    "Existing key is expired, tried to fetch updated one"
+                )
+            key_res[key].extend(str(err).splitlines())
 
     # Now all possible keys are present, manage their trust if requested
     if trust:
