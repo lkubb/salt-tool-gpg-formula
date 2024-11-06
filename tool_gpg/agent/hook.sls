@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
-{%- set sls_package_install = tplroot ~ '.package.install' %}
+{%- set tplroot = tpldir.split("/")[0] %}
+{%- set sls_package_install = tplroot ~ ".package.install" %}
 {%- from tplroot ~ "/map.jinja" import mapdata as gpg with context %}
 
 include:
@@ -10,13 +9,13 @@ include:
 
 
 {#- @TODO make sure that all the expected keys are initialized
-    by default and skip the messy 'defined' stuff #}
+    by default and skip the messy "defined" stuff #}
 
-{%- for user in gpg.users | selectattr('rchook', 'defined')
-                          | selectattr('rchook')
-                          | selectattr('gpg.agent', 'defined')
-                          | selectattr('gpg.agent.hook', 'defined')
-                          | selectattr('gpg.agent.hook') %}
+{%- for user in gpg.users | selectattr("rchook", "defined")
+                          | selectattr("rchook")
+                          | selectattr("gpg.agent", "defined")
+                          | selectattr("gpg.agent.hook", "defined")
+                          | selectattr("gpg.agent.hook") %}
 
 rchook file exists for gpg-agent for user '{{ user.name }}':
   file.managed:

@@ -12,7 +12,7 @@ include:
 {%-   set user_default_conf = user.home | path_join(gpg.lookup.paths.confdir) %}
 {%-   set user_xdg_confdir = user.xdg.config | path_join(gpg.lookup.paths.xdg_dirname) %}
 {%-   set user_xdg_datadir = user.xdg.data | path_join(gpg.lookup.paths.xdg_dirname) %}
-{%-   set conffiles = ['gpg.conf', 'gpg-agent.conf', 'sshcontrol'] %}
+{%-   set conffiles = ["gpg.conf", "gpg-agent.conf", "sshcontrol"] %}
 
 # workaround for file.rename not supporting user/group/mode for makedirs
 GnuPG has its data dir in XDG_DATA_HOME for user '{{ user.name }}':

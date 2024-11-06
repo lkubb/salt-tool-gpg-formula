@@ -1,3 +1,5 @@
+# vim: ft=sls
+
 {#-
   This teaches ssh to run the agent on demand and update the TTY to the current one.
   Fixes authentication popups in random tty, especially inside tmux.
@@ -9,8 +11,8 @@
       * https://unix.stackexchange.com/questions/554153/what-is-the-proper-configuration-for-gpg-ssh-and-gpg-agent-to-use-gpg-auth-sub
 -#}
 
-{%- set tplroot = tpldir.split('/')[0] %}
-{%- set sls_package_install = tplroot ~ '.package.install' %}
+{%- set tplroot = tpldir.split("/")[0] %}
+{%- set sls_package_install = tplroot ~ ".package.install" %}
 {%- from tplroot ~ "/map.jinja" import mapdata as gpg with context %}
 {%- from tplroot ~ "/libtofs.jinja" import files_switch with context %}
 
@@ -18,9 +20,9 @@ include:
   - {{ sls_package_install }}
 
 
-{%- for user in gpg.users | selectattr('gpg.agent', 'defined')
-                          | selectattr('gpg.agent.sshrc', 'defined')
-                          | selectattr('gpg.agent.sshrc') %}
+{%- for user in gpg.users | selectattr("gpg.agent", "defined")
+                          | selectattr("gpg.agent.sshrc", "defined")
+                          | selectattr("gpg.agent.sshrc") %}
 
 ssh config file exists for user '{{ user.name }}':
   file.managed:
@@ -40,5 +42,3 @@ SSH points gpg-agent to current TTY on connection for user '{{ user.name }}':
       - ssh config file exists for user '{{ user.name }}'
       - sls: {{ sls_package_install }}
 {%- endfor %}
-
-# vim: ft=sls

@@ -1,32 +1,31 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
-{%- set sls_package_install = tplroot ~ '.package.install' %}
+{%- set tplroot = tpldir.split("/")[0] %}
+{%- set sls_package_install = tplroot ~ ".package.install" %}
 {%- from tplroot ~ "/map.jinja" import mapdata as gpg with context %}
 
 include:
   - {{ sls_package_install }}
 
 {%- set trust_levels = {
-  'expired' : '1',
-  'unknown' : '2',
-  'not_trusted': '3',
-  'marginally': '4',
-  'fully': '5',
-  'ultimately': '6'
+  "expired" : "1",
+  "unknown" : "2",
+  "not_trusted": "3",
+  "marginally": "4",
+  "fully": "5",
+  "ultimately": "6"
 } %}
 
 
-{%- for user in gpg.users | selectattr('gpg.pubkeys', 'defined') %}
+{%- for user in gpg.users | selectattr("gpg.pubkeys", "defined") %}
 {%-   for key, config in user.gpg.pubkeys.items() %}
 
-{%-     set type = 'keyid' if config.get('is_keyid') else 'fingerprint' %}
+{%-     set type = "keyid" if config.get("is_keyid") else "fingerprint" %}
 
 Key file '{{ key }}' is present for user '{{ user.name }}':
   file.managed:
-    - name: {{ user._gpg.datadir | path_join('imports', key ~ '.gpg') }}
-{%-     if config.get('source') %}
+    - name: {{ user._gpg.datadir | path_join("imports", key ~ ".gpg") }}
+{%-     if config.get("source") %}
     - source: {{ config.source }}
     - skip_verify: true
 {%-     else %}

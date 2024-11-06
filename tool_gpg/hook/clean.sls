@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
-{%- set sls_package_install = tplroot ~ '.package.install' %}
+{%- set tplroot = tpldir.split("/")[0] %}
+{%- set sls_package_install = tplroot ~ ".package.install" %}
 {%- from tplroot ~ "/map.jinja" import mapdata as gpg with context %}
 
 include:
@@ -14,7 +13,7 @@ include:
   "default": "$(tty)"
   } %}
 
-{%- for user in gpg.users | selectattr('rchook', 'defined') | selectattr('rchook') %}
+{%- for user in gpg.users | selectattr("rchook", "defined") | selectattr("rchook") %}
 {%-   set hook_str = hook_str_map.get(user.shell, hook_str_map.default) %}
 {#-   workaround for salt-ssh not working with match.filter_by #}
 
