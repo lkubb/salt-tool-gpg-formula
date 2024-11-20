@@ -116,11 +116,6 @@ always pointing to the latest one. See:
 
 
 
-``tool_gpg.pubkeys.trust_synced``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
 ``tool_gpg.clean``
 ~~~~~~~~~~~~~~~~~~
 *Meta-state*.
