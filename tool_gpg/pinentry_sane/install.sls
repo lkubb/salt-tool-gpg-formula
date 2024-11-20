@@ -2,15 +2,17 @@
 
 {%- set tplroot = tpldir.split("/")[0] %}
 {%- from tplroot ~ "/map.jinja" import mapdata as gpg with context %}
-{%- from tplroot ~ "/libtofs.jinja" import files_switch with context %}
+{%- from tplroot ~ "/libtofsstack.jinja" import files_switch with context %}
 
 {%- if gpg.get("pinentry_sane") %}
 
 Sane pinentry is available:
   file.managed:
     - name: {{ gpg.lookup.pinentry_sane.path }}
-    - source: {{ files_switch(["pinentry-sane"],
-                              lookup="Sane pinentry is available"
+    - source: {{ files_switch(
+                    ["pinentry-sane"],
+                    lookup="Sane pinentry is available",
+                    config=gpg,
                  )
               }}
     - context:

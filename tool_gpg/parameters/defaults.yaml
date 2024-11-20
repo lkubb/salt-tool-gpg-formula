@@ -16,7 +16,13 @@ values:
     pinentry_sane:
       path: /usr/local/bin/pinentry-sane
       terminal: tty
-  # Just here for testing
-  added_in_defaults: defaults_value
-  winner: defaults
+  tofs:
+    files_switch:
+      - G@id|U@users
+      - id
+      - C@roles|U@users
+      - roles
+      - G@os_family|U@users
+      - os_family
+      - U@users
 ...

@@ -1,5 +1,5 @@
-Welcome to salt-tool-gpg-formula's documentation!
-=================================================
+Welcome to tool-gpg-formula's documentation!
+============================================
 
 .. toctree::
    :maxdepth: 2

@@ -3,7 +3,7 @@
 {%- set tplroot = tpldir.split("/")[0] %}
 {%- set sls_package_install = tplroot ~ ".package.install" %}
 {%- from tplroot ~ "/map.jinja" import mapdata as gpg with context %}
-{%- from tplroot ~ "/libtofs.jinja" import files_switch with context %}
+{%- from tplroot ~ "/libtofsstack.jinja" import files_switch with context %}
 
 include:
   - {{ sls_package_install }}
@@ -14,8 +14,11 @@ include:
 GnuPG Agent is configured as specified for user '{{ user.name }}':
   file.managed:
     - name: {{ user._gpg.confdir | path_join("gpg-agent.conf") }}
-    - source: {{ files_switch(["gpg-agent.conf"],
-                              lookup="GnuPG Agent is configured as specified for user '{{ user.name }}'"
+    - source: {{ files_switch(
+                    ["gpg-agent.conf"],
+                    lookup="GnuPG Agent is configured as specified for user '{}'".format(user.name),
+                    config=gpg,
+                    custom_data={"users": [user.name]},
                  )
               }}
     - mode: '0600'

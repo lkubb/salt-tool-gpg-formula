@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "salt_tool_gpg"
+name = "tool_gpg_formula"
 version = "1.0.0"
 description = "Saltstack states to manage GnuPG"
 authors = ["lkubb"]
