@@ -124,6 +124,8 @@ else:
         }
     )
 
+_DEFAULT_KEY_SERVER = "keys.openpgp.org"
+
 
 def _gpg():
     """
